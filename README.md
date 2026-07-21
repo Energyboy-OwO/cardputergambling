@@ -1,2 +1,1 @@
-# cardputer gambling
-Adds gambling to cardputers because why not :p
+# gamblinginator3000 ~ a silly cardputer thingy :3
