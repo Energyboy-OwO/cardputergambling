@@ -1,10 +1,10 @@
-name: Build and Release
+name: Build and Release Gamblinginator3000
 
 on:
   push:
     tags:
-      - 'v*' # Triggers when you push a tag like v1.0.0, v1.2, etc.
-  workflow_dispatch: # Allows manual triggering from the Actions tab
+      - 'v*' # Triggers when you push a tag like v1.0.0
+  workflow_dispatch: # Allows manual triggering
 
 jobs:
   build:
@@ -35,41 +35,44 @@ jobs:
 
     - name: Build executable with PyInstaller
       run: |
-        pyinstaller --onefile --windowed main.py
+        # --name sets the internal name of the executable
+        pyinstaller --onefile --windowed --name gamblinginator3000 main.py
 
-    # Rename the files so they are easy to identify in the release
-    - name: Rename binaries
+    - name: Rename binaries for release
       shell: bash
       run: |
+        # Create a clean folder for artifacts
+        mkdir -p final-dist
+        
         if [ "${{ runner.os }}" == "Windows" ]; then
-          mv dist/main.exe dist/myapp-windows.exe
+          mv dist/gamblinginator3000.exe final-dist/gamblinginator3000-windows.exe
         elif [ "${{ runner.os }}" == "macOS" ]; then
-          mv dist/main dist/myapp-macos
+          mv dist/gamblinginator3000 final-dist/gamblinginator3000-macos
         else
-          mv dist/main dist/myapp-linux
+          mv dist/gamblinginator3000 final-dist/gamblinginator3000-linux
         fi
 
     - name: Upload artifacts for release
       uses: actions/upload-artifact@v4
       with:
         name: binaries-${{ matrix.os }}
-        path: dist/myapp-*
+        path: final-dist/*
 
   release:
     needs: build
     runs-on: ubuntu-latest
     permissions:
-      contents: write # Required permission to create releases
+      contents: write
 
     steps:
     - name: Download all build artifacts
       uses: actions/download-artifact@v4
       with:
         path: release-files
-        merge-multiple: true # Flattens all downloaded files into one folder
+        merge-multiple: true
 
     - name: Create GitHub Release
       uses: softprops/action-gh-release@v2
       with:
         files: release-files/*
-        generate_release_notes: true # Automatically generates notes from your commits/PRs
+        generate_release_notes: true
