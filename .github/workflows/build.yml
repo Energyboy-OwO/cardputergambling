@@ -1,9 +1,10 @@
-name: Build Executables
+name: Build and Release
 
 on:
   push:
-    branches: [ "main" ]
-  workflow_dispatch: # Allows you to trigger the build manually from the Actions tab
+    tags:
+      - 'v*' # Triggers when you push a tag like v1.0.0, v1.2, etc.
+  workflow_dispatch: # Allows manual triggering from the Actions tab
 
 jobs:
   build:
@@ -21,8 +22,6 @@ jobs:
       with:
         python-version: '3.11'
 
-    # Tkinter is built-in on Windows/Mac, but NOT on Linux GitHub runners.
-    # This step installs the required system package for Linux.
     - name: Install Linux system dependencies (tkinter)
       if: runner.os == 'Linux'
       run: |
@@ -36,12 +35,41 @@ jobs:
 
     - name: Build executable with PyInstaller
       run: |
-        # --onefile: Creates a single .exe/binary file
-        # --windowed: Hides the terminal/console (perfect for Tkinter apps)
         pyinstaller --onefile --windowed main.py
 
-    - name: Upload build artifacts
+    # Rename the files so they are easy to identify in the release
+    - name: Rename binaries
+      shell: bash
+      run: |
+        if [ "${{ runner.os }}" == "Windows" ]; then
+          mv dist/main.exe dist/myapp-windows.exe
+        elif [ "${{ runner.os }}" == "macOS" ]; then
+          mv dist/main dist/myapp-macos
+        else
+          mv dist/main dist/myapp-linux
+        fi
+
+    - name: Upload artifacts for release
       uses: actions/upload-artifact@v4
       with:
-        name: app-${{ runner.os }}
-        path: dist/
+        name: binaries-${{ matrix.os }}
+        path: dist/myapp-*
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # Required permission to create releases
+
+    steps:
+    - name: Download all build artifacts
+      uses: actions/download-artifact@v4
+      with:
+        path: release-files
+        merge-multiple: true # Flattens all downloaded files into one folder
+
+    - name: Create GitHub Release
+      uses: softprops/action-gh-release@v2
+      with:
+        files: release-files/*
+        generate_release_notes: true # Automatically generates notes from your commits/PRs
