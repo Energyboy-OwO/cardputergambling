@@ -12,3 +12,9 @@ python main.py
 ```
 
 and have fun :p
+
+## screenshots :3
+
+<img src="screenshots/Screenshot%202026-07-22%20at%2000.12.35.png" width="300" alt="screenshot 1"/>
+<img src="screenshots/Screenshot%202026-07-22%20at%2000.12.39.png" width="300" alt="screenshot 2"/>
+<img src="screenshots/Screenshot%202026-07-22%20at%2000.12.43.png" width="300" alt="screenshot 3"/>
